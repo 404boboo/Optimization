@@ -1,6 +1,5 @@
 import random
 
-
 class Space():
 
     def __init__(self, height, width, num_hospitals):
@@ -83,6 +82,14 @@ class Space():
             # Generate image
             if image_prefix:
                 self.output_image(f"{image_prefix}{str(count).zfill(3)}.png")
+
+    def calculateHeatMap(space):
+        heatMap = {}
+        for row in range(space.height):
+            for col in range(space.width):
+                totalDistance = sum(abs(row - house[0]) + abs(col - house[1]) for house in space.houses)
+                heatMap[(row, col)] = totalDistance
+        return heatMap
 
     def random_restart(self, maximum, image_prefix=None, log=False):
         """Repeats hill-climbing multiple times."""
