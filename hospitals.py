@@ -1,4 +1,10 @@
 import random
+import numpy as np
+import matplotlib.pyplot as plt
+import os
+
+
+
 
 class Space():
 
@@ -82,14 +88,6 @@ class Space():
             # Generate image
             if image_prefix:
                 self.output_image(f"{image_prefix}{str(count).zfill(3)}.png")
-
-    def calculateHeatMap(space):
-        heatMap = {}
-        for row in range(space.height):
-            for col in range(space.width):
-                totalDistance = sum(abs(row - house[0]) + abs(col - house[1]) for house in space.houses)
-                heatMap[(row, col)] = totalDistance
-        return heatMap
 
     def random_restart(self, maximum, image_prefix=None, log=False):
         """Repeats hill-climbing multiple times."""
@@ -194,13 +192,34 @@ class Space():
             font=font
         )
 
-        img.save(filename)
+        img.save(os.path.join('output', filename))
+
+def calculateHeatMap(space):
+    heatMap = {}
+    for row in range(space.height):
+        for col in range(space.width):
+            totalDistance = sum(abs(row - house[0]) + abs(col - house[1]) for house in space.houses)
+            heatMap[(row, col)] = totalDistance
+    return heatMap
+    
+def visualizeHeatmap(space, heatMap):
+    data = np.zeros((space.height, space.width))
+    for (row, col), value in heatMap.items():
+        data[row, col] = value
+    plt.imshow(data, cmap='hot', interpolation='nearest')
+    plt.colorbar(label='Sum of Manhattan Distances')
+    plt.title('Heatmap of Manhattan Distances')
+    plt.show()
+
 
 
 # Create a new space and add houses randomly
-s = Space(height=10, width=20, num_hospitals=3)
+s = Space(height=10, width=20, num_hospitals=1)
 for i in range(15):
     s.add_house(random.randrange(s.height), random.randrange(s.width))
 
 # Use local search to determine hospital placement
 hospitals = s.hill_climb(image_prefix="hospitals", log=True)
+
+visualizeHeatmap(s, calculateHeatMap(s))
+
