@@ -15,6 +15,7 @@ class Space():
         self.num_hospitals = num_hospitals
         self.houses = set()
         self.hospitals = set()
+        self.path = []
 
     def add_house(self, row, col):
         """Add a house at a particular location in state space."""
@@ -49,7 +50,7 @@ class Space():
             print("Initial state: cost", self.get_cost(self.hospitals))
         if image_prefix:
             self.output_image(f"{image_prefix}{str(count).zfill(3)}.png")
-
+        self.path = [list(self.hospitals)[0]]
         # Continue until we reach maximum number of iterations
         while maximum is None or count < maximum:
             count += 1
@@ -77,17 +78,19 @@ class Space():
 
             # None of the neighbors are better than the current state
             if best_neighbor_cost >= self.get_cost(self.hospitals):
-                return self.hospitals
+                return self.hospitals, self.path
 
             # Move to a highest-valued neighbor
             else:
                 if log:
                     print(f"Found better neighbor: cost {best_neighbor_cost}")
                 self.hospitals = random.choice(best_neighbors)
+                self.path.append(list(self.hospitals)[0])
 
             # Generate image
             if image_prefix:
                 self.output_image(f"{image_prefix}{str(count).zfill(3)}.png")
+        return self.hospitals, self.path
 
     def random_restart(self, maximum, image_prefix=None, log=False):
         """Repeats hill-climbing multiple times."""
@@ -211,6 +214,20 @@ def visualizeHeatmap(space, heatMap):
     plt.title('Heatmap of Manhattan Distances')
     plt.show()
 
+def optimizePath(space, heatMap, path):
+    data = np.zeros((space.height, space.width))
+    for (row, col), value in heatMap.items():
+        data[row, col] = value
+    plt.imshow(data, cmap='hot', interpolation='nearest')
+    plt.colorbar(label='Sum of Manhattan Distances')
+    plt.title('Heatmap with Optimization Path')
+    path_rows, path_cols = zip(*path)
+    plt.plot(path_cols, path_rows, marker='o', color='blue')
+    plt.xlabel('Column')
+    plt.ylabel('Row')
+    plt.show()
+
+
 
 
 # Create a new space and add houses randomly
@@ -219,7 +236,7 @@ for i in range(15):
     s.add_house(random.randrange(s.height), random.randrange(s.width))
 
 # Use local search to determine hospital placement
-hospitals = s.hill_climb(image_prefix="hospitals", log=True)
-
-visualizeHeatmap(s, calculateHeatMap(s))
-
+hospitals, path = s.hill_climb(image_prefix="hospitals", log=True)
+heatMap = calculateHeatMap(s)
+#visualizeHeatmap(s, heatMap)
+optimizePath(s, heatMap, path)
